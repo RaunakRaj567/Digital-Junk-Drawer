@@ -1,0 +1,19 @@
+{
+    "model_name": "BBC News Naive Bayes File & Folder Classifier",
+    "major_categories": [
+        "politics",
+        "sports",
+        "tech",
+        "entertainment",
+        "business"
+    ],
+    "classes": [
+        "business",
+        "entertainment",
+        "politics",
+        "sports",
+        "tech"
+    ],
+    "vectorizer": "TfidfVectorizer(ngram_range=(1,2), sublinear_tf=True)",
+    "classifier": "MultinomialNB(alpha=0.05)"
+}

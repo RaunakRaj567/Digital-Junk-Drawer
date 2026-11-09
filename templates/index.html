@@ -1,0 +1,2198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Junk Drawer — Intelligent Document Organizer</title>
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-hover-border: rgba(99, 102, 241, 0.4);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-indigo: #6366f1;
+      --accent-blue: #3b82f6;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-purple: #a855f7;
+      --code-bg: rgba(15, 23, 42, 0.85);
+      --table-row-hover: rgba(51, 65, 85, 0.5);
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding-bottom: 40px;
+    }
+
+    /* Glassmorphism Card Utility */
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+      transition: all 0.25s ease;
+    }
+
+    .glass-card:hover {
+      border-color: var(--card-hover-border);
+    }
+
+    /* Navbar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 36px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--accent-indigo), var(--accent-purple));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: white;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .brand-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Tab Switcher */
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 5px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--card-border);
+    }
+
+    .nav-tab {
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+      background: transparent;
+      border: none;
+    }
+
+    .nav-tab:hover {
+      color: var(--text-main);
+    }
+
+    .nav-tab.active {
+      background: linear-gradient(135deg, var(--accent-indigo), var(--accent-blue));
+      color: white;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .container {
+      max-width: 1380px;
+      margin: 28px auto;
+      padding: 0 24px;
+    }
+
+    /* Page Sections */
+    .page-section {
+      display: none;
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    .page-section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Stage 1: Drop Zone & Actions */
+    .dropzone-container {
+      padding: 36px;
+      text-align: center;
+      border: 2px dashed rgba(99, 102, 241, 0.35);
+      border-radius: var(--radius-lg);
+      background: rgba(30, 41, 59, 0.4);
+      margin-bottom: 24px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .dropzone-container:hover, .dropzone-container.dragover {
+      border-color: var(--accent-indigo);
+      background: rgba(99, 102, 241, 0.08);
+      transform: scale(1.005);
+    }
+
+    .dropzone-icon {
+      font-size: 48px;
+      color: var(--accent-indigo);
+      margin-bottom: 12px;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-indigo), var(--accent-blue));
+      color: white;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+      font-size: 15px;
+      padding: 12px 24px;
+    }
+
+    .btn-success:hover {
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(51, 65, 85, 0.6);
+      color: var(--text-main);
+      border: 1px solid var(--card-border);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(71, 85, 105, 0.8);
+    }
+
+    /* Search Bar with Multi-Input */
+    .search-panel {
+      padding: 20px 24px;
+      margin-bottom: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .search-inputs-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .input-group {
+      position: relative;
+    }
+
+    .input-group i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 12px 14px 12px 40px;
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-sm);
+      color: white;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .input-field:focus {
+      border-color: var(--accent-indigo);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    /* Folder Properties Banner Card */
+    .folder-prop-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      align-items: center;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .prop-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .prop-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    .prop-value {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .prop-hash {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent-purple);
+      background: rgba(168, 85, 247, 0.15);
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      font-size: 13px;
+    }
+
+    /* Interactive Folder Cards (2-Tier Vertical Layout) */
+    .folder-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .folder-card {
+      padding: 16px 18px;
+      border-radius: var(--radius-md);
+      background: rgba(30, 41, 59, 0.65);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .folder-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(99, 102, 241, 0.5);
+      background: rgba(30, 41, 59, 0.85);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4), 0 0 14px rgba(99, 102, 241, 0.2);
+    }
+
+    .folder-card.active {
+      background: linear-gradient(145deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.18));
+      border-color: var(--accent-indigo);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.35);
+    }
+
+    .folder-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .folder-card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .icon-business { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+    .icon-tech { background: rgba(168, 85, 247, 0.2); color: #c084fc; }
+    .icon-politics { background: rgba(244, 63, 94, 0.2); color: #fb7185; }
+    .icon-sports { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .icon-entertainment { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .icon-all { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
+
+    .folder-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .folder-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .folder-count {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Merge Sort Controls Bar */
+    .controls-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background: rgba(30, 41, 59, 0.5);
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .sort-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .select-field {
+      padding: 8px 14px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Modern Table */
+    .table-responsive {
+      overflow-x: auto;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--card-border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    thead th {
+      background: rgba(15, 23, 42, 0.95);
+      padding: 14px 18px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    tbody td {
+      padding: 14px 18px;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: middle;
+    }
+
+    tbody tr {
+      transition: background 0.15s ease;
+      cursor: context-menu;
+    }
+
+    tbody tr:hover {
+      background: var(--table-row-hover);
+    }
+
+    /* Category Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .badge-business { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .badge-tech { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+    .badge-politics { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+    .badge-sports { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-entertainment { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+    .hash-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #94a3b8;
+      background: rgba(15, 23, 42, 0.8);
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Custom Right-Click Context Menu */
+    .context-menu {
+      position: fixed;
+      z-index: 10000;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.6);
+      padding: 6px;
+      min-width: 210px;
+      display: none;
+      animation: fadeIn 0.15s ease;
+    }
+
+    .context-menu-item {
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      border-radius: 6px;
+      color: #e2e8f0;
+      transition: all 0.15s ease;
+    }
+
+    .context-menu-item:hover {
+      background: linear-gradient(135deg, var(--accent-indigo), var(--accent-blue));
+      color: #ffffff;
+    }
+
+    .context-menu-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 4px 0;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--accent-indigo);
+      color: white;
+      padding: 14px 22px;
+      border-radius: var(--radius-sm);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 99999;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Diagnostics Card */
+    .diagnostics-bar {
+      margin-top: 24px;
+      padding: 16px 24px;
+      background: rgba(15, 23, 42, 0.75);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .diag-metric {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent-indigo);
+    }
+
+    /* Per-Folder Tree Button on Cards */
+    .folder-tree-btn {
+      padding: 5px 10px;
+      border-radius: 7px;
+      background: rgba(99, 102, 241, 0.14);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      color: #c7d2fe;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+    }
+
+    .folder-card:hover .folder-tree-btn {
+      background: rgba(99, 102, 241, 0.25);
+      border-color: rgba(99, 102, 241, 0.55);
+      color: #ffffff;
+    }
+
+    .folder-tree-btn:hover {
+      background: linear-gradient(135deg, var(--accent-indigo), var(--accent-purple)) !important;
+      color: #ffffff !important;
+      border-color: transparent !important;
+      transform: translateY(-1px) scale(1.05);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    /* Tree Visualizer Modal */
+    .tree-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 15, 30, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .tree-modal-overlay.open {
+      display: flex;
+    }
+
+    .tree-modal-box {
+      width: 100%;
+      max-width: 860px;
+      max-height: 86vh;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(99, 102, 241, 0.2);
+    }
+
+    .tree-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 16px;
+    }
+
+    .modal-close-btn {
+      background: rgba(51, 65, 85, 0.5);
+      border: 1px solid var(--card-border);
+      color: #94a3b8;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .modal-close-btn:hover {
+      background: rgba(244, 63, 94, 0.2);
+      color: #fb7185;
+      border-color: rgba(244, 63, 94, 0.4);
+    }
+
+    .tree-modal-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .tree-display-container {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: auto;
+      background: rgba(10, 15, 29, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      padding: 18px 22px;
+      min-height: 280px;
+      max-height: 52vh;
+    }
+
+    .tree-display-container pre {
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #e2e8f0;
+      margin: 0;
+      white-space: pre;
+    }
+
+    /* =========================================================================
+       Cryptographic Vault Lock Screen & Hashing Animation Styles
+       ========================================================================= */
+    .vault-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 12, 24, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20000;
+      padding: 20px;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .vault-modal-overlay.open {
+      display: flex;
+    }
+
+    .vault-modal-box {
+      width: 100%;
+      max-width: 760px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(244, 63, 94, 0.45);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(244, 63, 94, 0.25);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .vault-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 18px;
+    }
+
+    .vault-header-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #f43f5e, #e11d48);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      box-shadow: 0 0 20px rgba(244, 63, 94, 0.5);
+      animation: pulseGlow 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 15px rgba(244, 63, 94, 0.4); transform: scale(1); }
+      50% { box-shadow: 0 0 28px rgba(244, 63, 94, 0.7); transform: scale(1.04); }
+    }
+
+    .vault-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .vault-pass-wrapper {
+      display: flex;
+      position: relative;
+      align-items: center;
+    }
+
+    .vault-pass-input {
+      width: 100%;
+      padding: 14px 48px 14px 16px;
+      background: rgba(10, 15, 29, 0.9);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      border-radius: var(--radius-sm);
+      color: #ffffff;
+      font-size: 15px;
+      font-family: 'JetBrains Mono', monospace;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .vault-pass-input:focus {
+      border-color: var(--accent-indigo);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+    }
+
+    .vault-eye-btn {
+      position: absolute;
+      right: 14px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      transition: color 0.2s ease;
+    }
+
+    .vault-eye-btn:hover {
+      color: #ffffff;
+    }
+
+    /* Terminal Window for Live Hashing Animation */
+    .vault-terminal {
+      background: #090d16;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #94a3b8;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .terminal-titlebar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 8px;
+      margin-bottom: 4px;
+      color: var(--text-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .terminal-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .dot-red { background: #ef4444; }
+    .dot-yellow { background: #eab308; }
+    .dot-green { background: #22c55e; }
+
+    .term-line {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      word-break: break-all;
+    }
+
+    .term-prompt {
+      color: #6366f1;
+      font-weight: 700;
+    }
+
+    .term-hash-val {
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .term-scanning-beam {
+      height: 2px;
+      width: 100%;
+      background: linear-gradient(90deg, transparent, #6366f1, #a855f7, transparent);
+      animation: scanBeam 1.2s infinite linear;
+      display: none;
+    }
+
+    @keyframes scanBeam {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .term-result-box {
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin-top: 6px;
+      font-weight: 600;
+      display: none;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .term-result-box.success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid #10b981;
+      color: #34d399;
+      display: block;
+    }
+
+    .term-result-box.error {
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid #f43f5e;
+      color: #fb7185;
+      display: block;
+      animation: shakeBox 0.4s ease;
+    }
+
+    @keyframes shakeBox {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="navbar">
+    <div class="nav-brand">
+      <div class="brand-icon">
+        <i class="fa-solid fa-folder-tree"></i>
+      </div>
+      <div>
+        <div class="brand-title">Digital Junk Drawer</div>
+        <div class="brand-subtitle">ML-Powered Intelligent Document Organizer & Custom DSA Architecture</div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs & Vault Lock Status -->
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div class="nav-tabs">
+        <button class="nav-tab active" id="tab-p1" onclick="switchPage('p1')">
+          <i class="fa-solid fa-inbox"></i> 1. Unorganized Inbox
+        </button>
+        <button class="nav-tab" id="tab-p2" onclick="switchPage('p2')">
+          <i class="fa-solid fa-folder-open"></i> 2. Organised Folders Explorer
+          <span id="nav-lock-pill" style="font-size: 11px; margin-left: 6px; padding: 2px 7px; border-radius: 4px; background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.35); font-weight: 700;">
+            <i class="fa-solid fa-lock"></i> Locked
+          </span>
+        </button>
+      </div>
+      <button class="btn btn-secondary" id="btn-relock" onclick="lockVaultManual()" style="padding: 7px 12px; font-size: 12px; display: none;" title="Manually re-lock the organised folders">
+        <i class="fa-solid fa-lock"></i> Re-lock
+      </button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ==================================================================== -->
+    <!-- STAGE 1: UNORGANIZED FILES INBOX -->
+    <!-- ==================================================================== -->
+    <section id="page-1" class="page-section active">
+      <div class="glass-card" style="padding: 24px; margin-bottom: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+          <div>
+            <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">
+              <i class="fa-solid fa-box-archive" style="color: var(--accent-indigo); margin-right: 8px;"></i>
+              Files Waiting in <code>sample_unorganized_files/</code>
+            </h2>
+            <p style="font-size: 13px; color: var(--text-muted);">
+              Directly drop files into the folder or upload below. Then proceed to arrange them into organized major folders.
+            </p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-secondary" onclick="openExplorer('unorganized')">
+              <i class="fa-solid fa-folder-open"></i> Open in Explorer
+            </button>
+            <button class="btn btn-secondary" onclick="fetchUnorganizedFiles()">
+              <i class="fa-solid fa-rotate"></i> Refresh Inbox
+            </button>
+          </div>
+        </div>
+
+        <!-- Drag & Drop Zone -->
+        <div class="dropzone-container" id="dropzone" onclick="document.getElementById('file-input').click()">
+          <input type="file" id="file-input" multiple style="display: none;" onchange="handleFileUpload(event)">
+          <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+          <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">Click or Drag & Drop Files to Add to Inbox</h3>
+          <p style="font-size: 13px; color: var(--text-muted);">Supports PDF, DOCX, XLSX, CSV, MP4, MKV, ZIP, PY, MP3 and any other documents</p>
+        </div>
+
+        <!-- Unorganized Files Table -->
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Filename / Item</th>
+                <th>Type</th>
+                <th>Size</th>
+                <th>Date Modified</th>
+                <th>Location</th>
+              </tr>
+            </thead>
+            <tbody id="unorganized-table-body">
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                  <i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i> Loading files...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Action Banner -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--card-border);">
+          <div style="font-size: 14px; color: var(--text-muted);">
+            <i class="fa-solid fa-circle-info" style="color: var(--accent-indigo); margin-right: 6px;"></i>
+            <span id="unorg-status">Ready to arrange.</span>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button class="btn btn-success" id="btn-arrange" onclick="proceedToArrange()">
+              <i class="fa-solid fa-bolt"></i> Proceed to Arrange into Organised Folders
+            </button>
+            <button class="btn btn-primary" onclick="switchPage('p2')">
+              View Organised Folders ➔
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================================== -->
+    <!-- STAGE 2: ORGANISED FOLDERS EXPLORER -->
+    <!-- ==================================================================== -->
+    <section id="page-2" class="page-section">
+
+      <!-- Search & Properties Card -->
+      <div class="glass-card search-panel">
+        <div class="search-inputs-row">
+          <!-- Folder Search -->
+          <div class="input-group" style="flex: 1; min-width: 220px;">
+            <i class="fa-solid fa-folder-tree"></i>
+            <input type="text" class="input-field" id="search-folder" placeholder="Search Folder Name (e.g. Sports, Tech)..." oninput="searchFolderInput(event)">
+          </div>
+
+          <!-- File Search Across Any Folder -->
+          <div class="input-group" style="flex: 2; min-width: 280px;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" class="input-field" id="search-file" placeholder="🔍 Search Files of ANY Folder via Name (e.g. report, match, ai)..." oninput="filterFilesLive(event)">
+          </div>
+
+          <!-- Search Scope Selector -->
+          <select class="select-field" id="search-scope" onchange="filterFilesLive(event)" style="font-weight: 600; background: rgba(30, 41, 59, 0.95); border: 1px solid var(--accent-indigo);">
+            <option value="global" selected>🌐 Search ALL Folders</option>
+            <option value="current">📁 Active Folder Only</option>
+          </select>
+
+          <div style="display: flex; gap: 8px; flex-shrink: 0; margin-left: auto;">
+            <button class="btn btn-secondary" onclick="fetchOrganizedData(true)" title="Resync and refresh files from disk">
+              <i class="fa-solid fa-rotate"></i> Refresh
+            </button>
+            <button class="btn btn-secondary" onclick="resetSearch()">
+              <i class="fa-solid fa-xmark"></i> Reset
+            </button>
+            <button class="btn btn-secondary" onclick="openExplorer('organized')">
+              <i class="fa-solid fa-folder-open"></i> Explorer
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Folder Properties Card -->
+        <div class="folder-prop-card" id="folder-prop-card">
+          <div class="prop-item">
+            <span class="prop-label">Active Folder</span>
+            <span class="prop-value" id="prop-folder-name" style="color: var(--accent-indigo);">📂 All Organised Folders</span>
+          </div>
+          <div class="prop-item">
+            <span class="prop-label">Folder Hash-Code</span>
+            <span class="prop-value prop-hash" id="prop-hash-code">ROOT_TREE [Cap 32]</span>
+          </div>
+          <div class="prop-item">
+            <span class="prop-label">Total Documents</span>
+            <span class="prop-value" id="prop-doc-count">0 files</span>
+          </div>
+          <div class="prop-item">
+            <span class="prop-label">Folder Total Size</span>
+            <span class="prop-value" id="prop-total-size">0 B</span>
+          </div>
+          <div class="prop-item">
+            <span class="prop-label">File Types Breakdown</span>
+            <span class="prop-value" id="prop-types-breakdown" style="font-size: 13px;">None</span>
+          </div>
+          <div class="prop-item" style="justify-content: center; align-items: flex-end;">
+            <button class="btn btn-primary" onclick="openTreeModal(currentFolder)" style="padding: 8px 16px; font-size: 13px; font-weight: 700; white-space: nowrap;">
+              <i class="fa-solid fa-tree"></i> 🌳 Visualise Folder Tree
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clickable Folder Cards -->
+      <div class="folder-grid" id="folder-cards-grid">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Controls & Merge Sort Bar -->
+      <div class="controls-bar">
+        <div class="sort-group">
+          <span style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+            <i class="fa-solid fa-arrow-down-a-z" style="color: var(--accent-indigo); margin-right: 6px;"></i>
+            Custom Merge Sort:
+          </span>
+          <select class="select-field" id="sort-key" onchange="runMergeSort()">
+            <option value="filename">Filename</option>
+            <option value="upload_timestamp">Date of Upload</option>
+            <option value="file_size">File Size</option>
+          </select>
+          <select class="select-field" id="sort-order" onchange="runMergeSort()">
+            <option value="asc">Ascending (A-Z / Min / Old)</option>
+            <option value="desc">Descending (Z-A / Max / New)</option>
+          </select>
+          <button class="btn btn-secondary" style="padding: 7px 14px;" onclick="runMergeSort()">
+            Sort
+          </button>
+        </div>
+
+        <div style="font-size: 13px; color: var(--text-muted);">
+          <span id="sort-timing-feedback">Showing all documents.</span>
+          <span style="margin-left: 14px; font-size: 12px; color: var(--accent-indigo);">
+            <i class="fa-regular fa-lightbulb"></i> Right-click any row to copy filename!
+          </span>
+        </div>
+      </div>
+
+      <!-- Organised Documents Table -->
+      <div class="glass-card" style="padding: 16px;">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Doc ID</th>
+                <th>Filename</th>
+                <th>Folder / Category</th>
+                <th>File Size</th>
+                <th>Type</th>
+                <th>Upload Date</th>
+                <th>Document Hash-Code</th>
+              </tr>
+            </thead>
+            <tbody id="organized-table-body">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Custom HashMap Diagnostic Dashboard -->
+      <div class="diagnostics-bar">
+        <div>
+          <strong style="color: white; margin-right: 12px;">
+            <i class="fa-solid fa-microchip" style="color: var(--accent-indigo); margin-right: 6px;"></i>
+            Custom HashMap Status:
+          </strong>
+          <span id="diag-summary">Size=0 | Capacity=16 | LoadFactor=0.00 | Collisions=0</span>
+        </div>
+        <div>
+          <span class="diag-metric"><i class="fa-solid fa-code"></i> O(1) Access Guaranteed</span>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Right-Click Context Menu -->
+  <div class="context-menu" id="custom-context-menu">
+    <div class="context-menu-item" onclick="copyContextMenuField('filename')">
+      <i class="fa-regular fa-copy" style="color: #60a5fa;"></i> Copy Filename
+    </div>
+    <div class="context-menu-item" onclick="copyContextMenuField('doc_id')">
+      <i class="fa-solid fa-id-badge" style="color: #34d399;"></i> Copy Document ID
+    </div>
+    <div class="context-menu-item" onclick="copyContextMenuField('hash_code')">
+      <i class="fa-solid fa-key" style="color: #c084fc;"></i> Copy Hash-Code
+    </div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item" onclick="viewContextMenuDetails()">
+      <i class="fa-solid fa-circle-info" style="color: #fbbf24;"></i> View Full Properties
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <i class="fa-solid fa-circle-check" style="color: var(--accent-emerald); font-size: 18px;"></i>
+    <span id="toast-msg">Copied to clipboard!</span>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- CRYPTOGRAPHIC VAULT FOLDER LOCK MODAL -->
+  <!-- ========================================================================= -->
+  <div class="vault-modal-overlay" id="vault-lock-modal-overlay">
+    <div class="vault-modal-box" onclick="event.stopPropagation()">
+      <!-- Vault Header -->
+      <div class="vault-header">
+        <div class="vault-header-icon" id="vault-header-icon">
+          <i class="fa-solid fa-lock" id="vault-main-icon"></i>
+        </div>
+        <div style="flex: 1;">
+          <h3 style="font-size: 20px; font-weight: 800; color: #ffffff; margin-bottom: 4px;">
+            🔐 Organised Folders Vault Protected
+          </h3>
+          <p style="font-size: 13px; color: var(--text-muted);">
+            Authentication required to access classified document categories.
+          </p>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 11px; font-family: 'JetBrains Mono', monospace; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: #c7d2fe; padding: 4px 10px; border-radius: 6px;">
+            Algorithm: SHA-256
+          </span>
+        </div>
+      </div>
+
+      <!-- Password Input & Action Controls -->
+      <div class="vault-input-group">
+        <label style="font-size: 12px; font-weight: 700; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px;">
+          <i class="fa-solid fa-key" style="color: var(--accent-indigo); margin-right: 6px;"></i>
+          Enter Master Vault Password:
+        </label>
+        <div class="vault-pass-wrapper">
+          <input type="password" class="vault-pass-input" id="vault-pass-input" placeholder="Enter password..." autocomplete="off" onkeydown="if(event.key==='Enter') startVaultUnlockSequence()">
+          <button type="button" class="vault-eye-btn" onclick="togglePasswordVisibility()" title="Toggle visibility">
+            <i class="fa-solid fa-eye" id="vault-eye-icon"></i>
+          </button>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: -4px; flex-wrap: wrap; gap: 10px;">
+        <div style="font-size: 12px; color: var(--text-muted);">
+          <i class="fa-solid fa-database" style="color: #60a5fa; margin-right: 5px;"></i>
+          Stored Hashcode Location: <code style="color: #a5b4fc; background: rgba(15,23,42,0.8); padding: 2px 6px; border-radius: 4px;">security_vault.json</code>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-secondary" onclick="cancelVaultUnlock()" style="padding: 10px 18px;">
+            Cancel
+          </button>
+          <button class="btn btn-primary" id="btn-vault-unlock" onclick="startVaultUnlockSequence()" style="padding: 10px 22px; font-weight: 700; background: linear-gradient(135deg, #6366f1, #a855f7);">
+            <i class="fa-solid fa-fingerprint"></i> Authenticate & Match Hash
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Cryptographic Hashing Terminal Animation -->
+      <div class="vault-terminal" id="vault-terminal">
+        <div class="terminal-titlebar">
+          <div class="terminal-dots">
+            <div class="terminal-dot dot-red"></div>
+            <div class="terminal-dot dot-yellow"></div>
+            <div class="terminal-dot dot-green"></div>
+          </div>
+          <div>Cryptographic Hash Engine &bull; SHA-256 Digest Comparator</div>
+          <div id="term-status-badge" style="color: #94a3b8;">IDLE</div>
+        </div>
+
+        <div class="term-scanning-beam" id="term-scanning-beam"></div>
+
+        <div id="terminal-log" style="display: flex; flex-direction: column; gap: 6px; min-height: 120px; justify-content: center;">
+          <div style="text-align: center; color: #64748b; font-style: italic;">
+            Ready for input. Type password and click "Authenticate & Match Hash" to start cryptographic hashing demonstration.
+          </div>
+        </div>
+
+        <div class="term-result-box" id="term-result-box"></div>
+      </div>
+
+      <!-- Footer Info -->
+      <div style="font-size: 11px; color: #64748b; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <span>🔒 Zero Plaintext Storage: Only the 256-bit hash digest is verified against backend</span>
+        <span>Constant-Time Comparison (HMAC safe)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom N-ary Tree Visualizer Modal (folder_tree.py) -->
+  <div class="tree-modal-overlay" id="tree-modal-overlay" onclick="handleTreeModalBackdrop(event)">
+    <div class="tree-modal-box glass-card" onclick="event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="tree-modal-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg, #10b981, #059669); display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
+            <i class="fa-solid fa-tree"></i>
+          </div>
+          <div>
+            <h3 style="font-size: 18px; font-weight: 800; color: #ffffff; margin-bottom: 2px;">
+              Custom N-ary Folder Tree Hierarchy
+            </h3>
+            <p style="font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">
+              <span style="color: #34d399;">dsa/folder_tree.py</span> &bull; Hierarchical Category Organization (DFS Traversal)
+            </p>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeTreeModal()" title="Close (Esc)">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Controls Bar inside Modal -->
+      <div class="tree-modal-controls">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+            <i class="fa-solid fa-filter" style="color: var(--accent-indigo); margin-right: 4px;"></i> View Node:
+          </label>
+          <select class="select-field" id="tree-category-select" onchange="switchTreeCategory(this.value)" style="font-weight: 600; min-width: 210px; background: rgba(15, 23, 42, 0.95); border: 1px solid var(--accent-indigo);">
+            <option value="All Folders">📦 All Folders (Full N-ary Tree)</option>
+            <option value="Business">📂 Business Folder Node</option>
+            <option value="Tech">📂 Tech Folder Node</option>
+            <option value="Politics">📂 Politics Folder Node</option>
+            <option value="Sports">📂 Sports Folder Node</option>
+            <option value="Entertainment">📂 Entertainment Folder Node</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-secondary" onclick="loadTreeData()" style="padding: 7px 14px; font-size: 13px;" title="Re-sync with disk">
+            <i class="fa-solid fa-rotate"></i> Refresh
+          </button>
+          <button class="btn btn-primary" onclick="copyTreeToClipboard()" style="padding: 7px 16px; font-size: 13px;">
+            <i class="fa-solid fa-copy"></i> Copy Hierarchy
+          </button>
+        </div>
+      </div>
+
+      <!-- Tree Metadata Strip -->
+      <div id="tree-meta-strip" style="display: flex; gap: 18px; padding: 10px 16px; background: rgba(15, 23, 42, 0.7); border-radius: 8px; font-size: 12px; border: 1px solid rgba(255,255,255,0.06); margin-bottom: 14px; flex-wrap: wrap;">
+        <span><strong>Scope:</strong> <span id="tree-meta-scope" style="color: var(--accent-indigo); font-weight: 700;">All Folders</span></span>
+        <span><strong>Total Categories:</strong> <span id="tree-meta-cats" style="color: #34d399; font-weight: 700;">5</span></span>
+        <span><strong>Total Documents:</strong> <span id="tree-meta-docs" style="color: #60a5fa; font-weight: 700;">-</span></span>
+        <span><strong>Algorithm:</strong> <span style="color: #c084fc; font-family: 'JetBrains Mono', monospace;">N-ary Tree DFS</span></span>
+      </div>
+
+      <!-- ASCII Tree View Area -->
+      <div class="tree-display-container">
+        <pre id="tree-ascii-output">Loading custom tree hierarchy...</pre>
+      </div>
+
+      <!-- Modal Footer -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 12px; color: var(--text-muted); flex-wrap: wrap; gap: 8px;">
+        <span><i class="fa-solid fa-circle-check" style="color: #10b981; margin-right: 6px;"></i>Synced with <code>organized_files_output/</code> disk structure</span>
+        <button class="btn btn-secondary" onclick="closeTreeModal()" style="padding: 6px 14px; font-size: 12px;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Application Logic -->
+  <script>
+    let currentFolder = "All Folders";
+    let activeDocuments = [];
+    let allDocumentsCache = [];
+    let activeFolderProperties = null;
+    let selectedRowDoc = null;
+    let isVaultUnlocked = false;
+
+    // Initialize on load
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchUnorganizedFiles();
+      checkVaultStatusOnLoad();
+      setupContextMenu();
+    });
+
+    async function checkVaultStatusOnLoad() {
+      try {
+        const res = await fetch("/api/security/status");
+        const data = await res.json();
+        isVaultUnlocked = (data.status === "UNLOCKED");
+        updateVaultNavBadge();
+        if (isVaultUnlocked) {
+          fetchOrganizedData();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Page Switching (Protected by Cryptographic Vault Lock)
+    function switchPage(pageId) {
+      if (pageId === "p2" && !isVaultUnlocked) {
+        // Vault is locked! Prompt for password with cryptographic animation
+        openVaultLockModal();
+        return;
+      }
+
+      document.querySelectorAll(".page-section").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+
+      if (pageId === "p1") {
+        document.getElementById("page-1").classList.add("active");
+        document.getElementById("tab-p1").classList.add("active");
+        fetchUnorganizedFiles();
+      } else {
+        document.getElementById("page-2").classList.add("active");
+        document.getElementById("tab-p2").classList.add("active");
+        fetchOrganizedData();
+      }
+    }
+
+    // 1. Fetch Unorganized Files (Stage 1)
+    async function fetchUnorganizedFiles() {
+      try {
+        const res = await fetch("/api/unorganized");
+        const items = await res.json();
+        const tbody = document.getElementById("unorganized-table-body");
+        tbody.innerHTML = "";
+
+        if (items.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">Inbox is empty. Add or drop files into <code>sample_unorganized_files/</code></td></tr>`;
+          document.getElementById("unorg-status").innerText = "Inbox empty (0 files).";
+          return;
+        }
+
+        items.forEach(it => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><strong>${escapeHtml(it.name)}</strong></td>
+            <td><span class="badge" style="background: rgba(255,255,255,0.08);">${it.file_type}</span></td>
+            <td>${it.formatted_size}</td>
+            <td>${it.modified_time}</td>
+            <td style="color: var(--text-muted); font-size: 12px;">${escapeHtml(it.path)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        document.getElementById("unorg-status").innerText = `${items.length} file(s) waiting in sample_unorganized_files/.`;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // 2. Proceed to Arrange (Locks Vault upon completion)
+    async function proceedToArrange() {
+      const btn = document.getElementById("btn-arrange");
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Classifying via ML...`;
+      btn.disabled = true;
+
+      try {
+        const res = await fetch("/api/arrange", { method: "POST" });
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Server status ${res.status}: ${errText}`);
+        }
+        const data = await res.json();
+
+        // Immediately lock the vault
+        isVaultUnlocked = false;
+        updateVaultNavBadge();
+
+        showToast(`✓ Classified & arranged ${data.length} docs! Folders are now locked.`);
+        document.getElementById("unorg-status").innerText = `✓ Arranged ${data.length} files. Folders are protected by Vault Lock.`;
+
+        // Reset client-side cache
+        allDocumentsCache = [];
+        await fetchUnorganizedFiles();
+
+        // Prompt user to unlock with password
+        setTimeout(() => {
+          openVaultLockModal();
+        }, 700);
+      } catch (err) {
+        showToast("Error arranging files: " + err);
+      } finally {
+        btn.innerHTML = `<i class="fa-solid fa-bolt"></i> Proceed to Arrange into Organised Folders`;
+        btn.disabled = false;
+      }
+    }
+
+    // 3. Fetch Organized Folders & Documents (Stage 2)
+    async function fetchOrganizedData(showToastMsg = false) {
+      try {
+        const res = await fetch(`/api/organized?folder=${encodeURIComponent(currentFolder)}`);
+        const data = await res.json();
+
+        // Render Folder Cards
+        renderFolderCards(data.categories, data.active_folder);
+
+        // Update Properties Card
+        activeFolderProperties = data.folder_properties;
+        updatePropertiesCard(data.folder_properties);
+
+        // Render Document Table
+        activeDocuments = data.documents;
+        if (currentFolder === "All Folders" || allDocumentsCache.length === 0) {
+          allDocumentsCache = data.documents;
+        }
+
+        renderDocumentTable(activeDocuments);
+
+        // Update Diagnostics
+        document.getElementById("diag-summary").innerText = 
+          `Stored(N)=${data.diagnostics.size} | Capacity(M)=${data.diagnostics.capacity} | LoadFactor=${data.diagnostics.load_factor} | Collisions=${data.diagnostics.collisions} | MaxChain=${data.diagnostics.max_chain_length}`;
+
+        // Ensure allDocumentsCache is populated for global search even if viewing a subfolder
+        if (currentFolder !== "All Folders") {
+          fetch("/api/organized?folder=All%20Folders")
+            .then(r => r.json())
+            .then(d => { allDocumentsCache = d.documents; })
+            .catch(e => console.error(e));
+        }
+
+        if (showToastMsg) {
+          showToast(`✓ Synchronized with disk! (${data.documents.length} files in active view)`);
+        }
+
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Render Folder Cards
+    function renderFolderCards(categories, activeFolder) {
+      const grid = document.getElementById("folder-cards-grid");
+      grid.innerHTML = "";
+
+      const icons = {
+        "Business": "fa-briefcase icon-business",
+        "Tech": "fa-microchip icon-tech",
+        "Politics": "fa-landmark icon-politics",
+        "Sports": "fa-futbol icon-sports",
+        "Entertainment": "fa-film icon-entertainment",
+        "All Folders": "fa-folder-tree icon-all"
+      };
+
+      categories.forEach(cat => {
+        const isActive = (cat.name === activeFolder);
+        const card = document.createElement("div");
+        card.className = `folder-card ${isActive ? 'active' : ''}`;
+        card.onclick = () => selectFolder(cat.name);
+
+        const iconClass = icons[cat.name] || "fa-folder icon-all";
+
+        card.innerHTML = `
+          <div class="folder-card-header">
+            <div class="folder-card-icon ${iconClass}">
+              <i class="fa-solid ${iconClass.split(' ')[0]}"></i>
+            </div>
+            <button class="folder-tree-btn" onclick="event.stopPropagation(); openTreeModal('${cat.name}')" title="Visualise ${cat.name} hierarchy in Custom N-ary Tree (folder_tree.py)">
+              <i class="fa-solid fa-folder-tree"></i> Tree
+            </button>
+          </div>
+          <div class="folder-info">
+            <span class="folder-name">${cat.name}</span>
+            <span class="folder-count">${cat.count} ${cat.count === 1 ? 'file' : 'files'}</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Select Folder Card
+    function selectFolder(folderName) {
+      currentFolder = folderName;
+      document.getElementById("search-file").value = "";
+      fetchOrganizedData();
+    }
+
+    // Update Properties Card
+    function updatePropertiesCard(props) {
+      if (!props) return;
+      document.getElementById("prop-folder-name").innerText = `📂 ${props.category_name}`;
+      document.getElementById("prop-hash-code").innerText = props.hash_code;
+      document.getElementById("prop-doc-count").innerText = `${props.file_count} documents`;
+      document.getElementById("prop-total-size").innerText = props.formatted_size;
+      document.getElementById("prop-types-breakdown").innerText = props.type_breakdown;
+    }
+
+    // Render Document Table
+    function renderDocumentTable(docs) {
+      const tbody = document.getElementById("organized-table-body");
+      tbody.innerHTML = "";
+
+      if (docs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">No matching documents found.</td></tr>`;
+        return;
+      }
+
+      const badgeClasses = {
+        "business": "badge-business",
+        "tech": "badge-tech",
+        "politics": "badge-politics",
+        "sports": "badge-sports",
+        "entertainment": "badge-entertainment"
+      };
+
+      docs.forEach(doc => {
+        const tr = document.createElement("tr");
+        const bClass = badgeClasses[doc.category.toLowerCase()] || "badge-tech";
+
+        tr.innerHTML = `
+          <td><span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #93c5fd;">${doc.doc_id}</span></td>
+          <td><strong style="color: white;">${escapeHtml(doc.filename)}</strong></td>
+          <td><span class="badge ${bClass}"><i class="fa-solid fa-folder"></i> ${doc.category}</span></td>
+          <td>${doc.formatted_size}</td>
+          <td><span class="badge" style="background: rgba(255,255,255,0.06);">${doc.file_type.toUpperCase()}</span></td>
+          <td>${doc.upload_time_formatted}</td>
+          <td><span class="hash-badge">${doc.hash_code}</span></td>
+        `;
+
+        // Context Menu Handler on Row
+        tr.addEventListener("contextmenu", (e) => {
+          e.preventDefault();
+          selectedRowDoc = doc;
+          showContextMenu(e.pageX, e.pageY);
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 4. Custom Merge Sort (API Call)
+    async function runMergeSort() {
+      const key = document.getElementById("sort-key").value;
+      const order = document.getElementById("sort-order").value;
+      const isDesc = (order === "desc");
+
+      const t0 = performance.now();
+      const res = await fetch(`/api/sort?category=${encodeURIComponent(currentFolder)}&sort_by=${key}&reverse=${isDesc}`);
+      const sortedDocs = await res.json();
+      const t1 = performance.now();
+
+      activeDocuments = sortedDocs;
+      if (currentFolder === "All Folders") {
+        allDocumentsCache = sortedDocs;
+      }
+      renderDocumentTable(sortedDocs);
+
+      document.getElementById("sort-timing-feedback").innerText = 
+        `Merge Sort: ${sortedDocs.length} items sorted by '${key}' in ${(t1 - t0).toFixed(2)} ms.`;
+    }
+
+    // Helper: Format Bytes
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return "0 B";
+      let b = parseFloat(bytes);
+      const units = ["B", "KB", "MB", "GB"];
+      for (let u of units) {
+        if (b < 1024.0 || u === "GB") {
+          return (u !== "B" ? b.toFixed(1) : parseInt(b)) + " " + u;
+        }
+        b /= 1024.0;
+      }
+      return `${bytes} B`;
+    }
+
+    // 5. Live File Filter (Search File Input Across Any Folder)
+    function filterFilesLive(e) {
+      const searchInput = document.getElementById("search-file");
+      const query = (searchInput ? searchInput.value : "").trim().toLowerCase();
+      const scopeElem = document.getElementById("search-scope");
+      const scope = scopeElem ? scopeElem.value : "global";
+
+      if (!query) {
+        if (activeFolderProperties) {
+          updatePropertiesCard(activeFolderProperties);
+        }
+        renderDocumentTable(activeDocuments);
+        document.getElementById("sort-timing-feedback").innerText = 
+          `Showing ${activeDocuments.length} document(s) in '${currentFolder}'.`;
+        return;
+      }
+
+      // Candidate documents pool based on scope
+      let candidates = [];
+      if (scope === "global") {
+        candidates = (allDocumentsCache && allDocumentsCache.length > 0) ? allDocumentsCache : activeDocuments;
+      } else {
+        candidates = activeDocuments;
+      }
+
+      const filtered = candidates.filter(d => 
+        d.filename.toLowerCase().includes(query) || 
+        d.doc_id.toLowerCase().includes(query) ||
+        d.file_type.toLowerCase().includes(query) ||
+        d.category.toLowerCase().includes(query)
+      );
+
+      renderDocumentTable(filtered);
+
+      const categoriesFound = [...new Set(filtered.map(d => d.category))];
+      const totalBytes = filtered.reduce((acc, d) => acc + (d.file_size || 0), 0);
+      const formattedSize = formatBytes(totalBytes);
+
+      // Dynamically display search results in folder-prop-card
+      document.getElementById("prop-folder-name").innerText = 
+        scope === "global" ? `🔍 Global Search: "${query}"` : `🔍 Folder Search: "${query}"`;
+      document.getElementById("prop-hash-code").innerText = 
+        `SEARCH_MATCH_${filtered.length}`;
+      document.getElementById("prop-doc-count").innerText = `${filtered.length} matching files`;
+      document.getElementById("prop-total-size").innerText = formattedSize;
+      document.getElementById("prop-types-breakdown").innerText = 
+        categoriesFound.length > 0 ? `Folders: ${categoriesFound.join(", ")}` : "No matching folders";
+
+      document.getElementById("sort-timing-feedback").innerText = 
+        `🔍 ${scope === 'global' ? 'Global File Search' : 'Folder Search'}: Found ${filtered.length} file(s) across folders [${categoriesFound.join(", ")}] matching '${query}'`;
+    }
+
+    // 6. Folder Search Bar
+    async function searchFolderInput(e) {
+      const query = e.target.value.trim().toLowerCase();
+      if (!query) return;
+
+      const categories = ["Business", "Tech", "Politics", "Sports", "Entertainment"];
+      const match = categories.find(c => c.toLowerCase().includes(query));
+      if (match) {
+        selectFolder(match);
+      }
+    }
+
+    function resetSearch() {
+      document.getElementById("search-folder").value = "";
+      document.getElementById("search-file").value = "";
+      const scopeElem = document.getElementById("search-scope");
+      if (scopeElem) scopeElem.value = "global";
+      selectFolder("All Folders");
+    }
+
+    // 7. Context Menu Setup
+    function setupContextMenu() {
+      const menu = document.getElementById("custom-context-menu");
+      document.addEventListener("click", () => {
+        menu.style.display = "none";
+      });
+    }
+
+    function showContextMenu(x, y) {
+      const menu = document.getElementById("custom-context-menu");
+      menu.style.left = `${x}px`;
+      menu.style.top = `${y}px`;
+      menu.style.display = "block";
+    }
+
+    function copyContextMenuField(field) {
+      if (!selectedRowDoc) return;
+      let textToCopy = "";
+      if (field === "filename") textToCopy = selectedRowDoc.filename;
+      else if (field === "doc_id") textToCopy = selectedRowDoc.doc_id;
+      else if (field === "hash_code") textToCopy = selectedRowDoc.hash_code;
+
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        showToast(`📋 Copied ${field}: "${textToCopy}"`);
+      });
+    }
+
+    function viewContextMenuDetails() {
+      if (!selectedRowDoc) return;
+      alert(
+        `📄 Document Details:\n` +
+        `• ID: ${selectedRowDoc.doc_id}\n` +
+        `• Filename: ${selectedRowDoc.filename}\n` +
+        `• Category: ${selectedRowDoc.category}\n` +
+        `• Hash-Code: ${selectedRowDoc.hash_code}\n` +
+        `• Size: ${selectedRowDoc.formatted_size}\n` +
+        `• Type: ${selectedRowDoc.file_type.toUpperCase()}\n` +
+        `• Upload Date: ${selectedRowDoc.upload_time_formatted}\n` +
+        `• Path: ${selectedRowDoc.file_path}`
+      );
+    }
+
+    // Toast Notification
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      document.getElementById("toast-msg").innerText = message;
+      toast.classList.add("show");
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+
+    // Helper: Escape HTML
+    function escapeHtml(text) {
+      if (!text) return "";
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    // Open in OS Explorer
+    function openExplorer(target) {
+      fetch(`/api/open_explorer?target=${target}`, { method: "POST" });
+    }
+
+    // File Upload Handler
+    async function handleFileUpload(e) {
+      const files = e.target.files;
+      if (!files.length) return;
+
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append("files", files[i]);
+      }
+
+      const res = await fetch("/api/upload_to_unorganized", {
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+      showToast(`Added ${data.uploaded} file(s) to sample_unorganized_files!`);
+      fetchUnorganizedFiles();
+    }
+
+    // =========================================================================
+    // Custom N-ary Tree Visualizer Modal (dsa/folder_tree.py)
+    // =========================================================================
+    let currentTreeCategory = "All Folders";
+
+    function openTreeModal(category) {
+      const targetCategory = category || currentFolder || "All Folders";
+      currentTreeCategory = targetCategory;
+
+      const selectEl = document.getElementById("tree-category-select");
+      if (selectEl) {
+        // Match value or default to "All Folders"
+        let found = false;
+        for (let opt of selectEl.options) {
+          if (opt.value.toLowerCase() === targetCategory.toLowerCase()) {
+            selectEl.value = opt.value;
+            currentTreeCategory = opt.value;
+            found = true;
+            break;
+          }
+        }
+        if (!found) selectEl.value = "All Folders";
+      }
+
+      const modal = document.getElementById("tree-modal-overlay");
+      if (modal) {
+        modal.classList.add("open");
+        loadTreeData(currentTreeCategory);
+      }
+    }
+
+    function closeTreeModal() {
+      const modal = document.getElementById("tree-modal-overlay");
+      if (modal) {
+        modal.classList.remove("open");
+      }
+    }
+
+    function handleTreeModalBackdrop(e) {
+      if (e.target && e.target.id === "tree-modal-overlay") {
+        closeTreeModal();
+      }
+    }
+
+    function switchTreeCategory(category) {
+      currentTreeCategory = category;
+      loadTreeData(category);
+    }
+
+    async function loadTreeData(category) {
+      const cat = category || currentTreeCategory || "All Folders";
+      const preEl = document.getElementById("tree-ascii-output");
+      if (preEl) {
+        preEl.innerText = `⏳ Building N-ary Tree representation for [${cat}] via DFS traversal...`;
+      }
+
+      try {
+        const res = await fetch(`/api/tree?category=${encodeURIComponent(cat)}`);
+        const data = await res.json();
+
+        if (preEl) {
+          preEl.innerText = data.ascii_tree || "No tree data returned.";
+        }
+
+        const scopeEl = document.getElementById("tree-meta-scope");
+        if (scopeEl) scopeEl.innerText = data.category;
+
+        const catsEl = document.getElementById("tree-meta-cats");
+        if (catsEl) catsEl.innerText = data.total_categories;
+
+        const docsEl = document.getElementById("tree-meta-docs");
+        if (docsEl) docsEl.innerText = `${data.total_documents} files`;
+
+      } catch (err) {
+        if (preEl) {
+          preEl.innerText = `❌ Error loading tree hierarchy: ${err.message}`;
+        }
+      }
+    }
+
+    function copyTreeToClipboard() {
+      const preEl = document.getElementById("tree-ascii-output");
+      if (!preEl) return;
+      navigator.clipboard.writeText(preEl.innerText).then(() => {
+        showToast("🌳 Tree hierarchy copied to clipboard!");
+      }).catch(err => {
+        showToast("Could not copy to clipboard: " + err);
+      });
+    }
+
+    // =========================================================================
+    // Cryptographic Vault Folder Lock & Hashing Animation Logic
+    // =========================================================================
+    function openVaultLockModal() {
+      const modal = document.getElementById("vault-lock-modal-overlay");
+      const input = document.getElementById("vault-pass-input");
+      const log = document.getElementById("terminal-log");
+      const badge = document.getElementById("term-status-badge");
+      const resultBox = document.getElementById("term-result-box");
+      const icon = document.getElementById("vault-main-icon");
+      const headerIcon = document.getElementById("vault-header-icon");
+
+      if (input) input.value = "";
+      if (badge) {
+        badge.innerText = "AWAITING PASSWORD";
+        badge.style.color = "#94a3b8";
+      }
+      if (resultBox) {
+        resultBox.style.display = "none";
+        resultBox.className = "term-result-box";
+      }
+      if (icon) icon.className = "fa-solid fa-lock";
+      if (headerIcon) headerIcon.style.background = "linear-gradient(135deg, #f43f5e, #e11d48)";
+
+      if (log) {
+        log.innerHTML = `
+          <div style="text-align: center; color: #64748b; font-style: italic; padding: 20px 0;">
+            <i class="fa-solid fa-terminal" style="margin-right: 6px;"></i> Ready for input. Enter password and click "Authenticate & Match Hash" to start cryptographic hashing demonstration.
+          </div>
+        `;
+      }
+
+      if (modal) modal.classList.add("open");
+      if (input) setTimeout(() => input.focus(), 150);
+    }
+
+    function closeVaultLockModal() {
+      const modal = document.getElementById("vault-lock-modal-overlay");
+      if (modal) modal.classList.remove("open");
+    }
+
+    function cancelVaultUnlock() {
+      closeVaultLockModal();
+      // Ensure user remains safely in Page 1 (Inbox)
+      switchPage("p1");
+    }
+
+    function togglePasswordVisibility() {
+      const input = document.getElementById("vault-pass-input");
+      const icon = document.getElementById("vault-eye-icon");
+      if (!input || !icon) return;
+      if (input.type === "password") {
+        input.type = "text";
+        icon.className = "fa-solid fa-eye-slash";
+      } else {
+        input.type = "password";
+        icon.className = "fa-solid fa-eye";
+      }
+    }
+
+    function updateVaultNavBadge() {
+      const pill = document.getElementById("nav-lock-pill");
+      const relockBtn = document.getElementById("btn-relock");
+      if (isVaultUnlocked) {
+        if (pill) {
+          pill.innerHTML = `<i class="fa-solid fa-lock-open"></i> Unlocked`;
+          pill.style.background = "rgba(16, 185, 129, 0.2)";
+          pill.style.color = "#34d399";
+          pill.style.borderColor = "rgba(16, 185, 129, 0.4)";
+        }
+        if (relockBtn) relockBtn.style.display = "inline-flex";
+      } else {
+        if (pill) {
+          pill.innerHTML = `<i class="fa-solid fa-lock"></i> Locked`;
+          pill.style.background = "rgba(244, 63, 94, 0.2)";
+          pill.style.color = "#fb7185";
+          pill.style.borderColor = "rgba(244, 63, 94, 0.4)";
+        }
+        if (relockBtn) relockBtn.style.display = "none";
+      }
+    }
+
+    async function lockVaultManual() {
+      try {
+        await fetch("/api/security/lock", { method: "POST" });
+        isVaultUnlocked = false;
+        updateVaultNavBadge();
+        showToast("🔒 Organised Folders Vault Re-locked!");
+        switchPage("p1");
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Interactive Cryptographic Hashing Animation & Authentication Sequence
+    async function startVaultUnlockSequence() {
+      const passInput = document.getElementById("vault-pass-input");
+      const password = (passInput ? passInput.value : "").trim();
+      const unlockBtn = document.getElementById("btn-vault-unlock");
+      const termLog = document.getElementById("terminal-log");
+      const termBadge = document.getElementById("term-status-badge");
+      const beam = document.getElementById("term-scanning-beam");
+      const resultBox = document.getElementById("term-result-box");
+
+      if (!password) {
+        showToast("⚠️ Please enter a password (e.g. Ron567)");
+        if (passInput) passInput.focus();
+        return;
+      }
+
+      if (unlockBtn) {
+        unlockBtn.disabled = true;
+        unlockBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Hashing & Verifying...`;
+      }
+      if (termBadge) {
+        termBadge.innerText = "COMPUTING HASH";
+        termBadge.style.color = "#38bdf8";
+      }
+      if (resultBox) {
+        resultBox.style.display = "none";
+        resultBox.className = "term-result-box";
+      }
+
+      // Convert characters to byte representations
+      const utf8Bytes = Array.from(new TextEncoder().encode(password))
+        .map(b => "0x" + b.toString(16).toUpperCase().padStart(2, "0"))
+        .join(", ");
+
+      // STAGE 1: Visual Plaintext to Byte Stream & Hashing Animation
+      if (termLog) {
+        termLog.innerHTML = `
+          <div class="term-line"><span class="term-prompt">[STAGE 1]</span> <span>Encoding Plaintext String: "${escapeHtml('*'.repeat(password.length))}" (${password.length} characters)</span></div>
+          <div class="term-line"><span class="term-prompt">[BYTES]</span> <span style="color: #cbd5e1;">UTF-8 Byte Stream: [${utf8Bytes}]</span></div>
+          <div class="term-line"><span class="term-prompt">[HASH]</span> <span>Executing SHA-256 Merkle-Damgård Compression Pipeline...</span></div>
+          <div class="term-line" id="term-hash-tumble"><span class="term-prompt">[DIGEST]</span> <span class="term-hash-val" id="tumble-text">Computing 256-bit hashcode...</span></div>
+        `;
+      }
+
+      // Matrix character tumble effect (visualizes real-time hashcode computation)
+      const tumbleEl = document.getElementById("tumble-text");
+      const hexChars = "0123456789abcdef";
+      let frames = 0;
+      const interval = setInterval(() => {
+        let fakeHex = "";
+        for (let i = 0; i < 64; i++) {
+          fakeHex += hexChars[Math.floor(Math.random() * hexChars.length)];
+        }
+        if (tumbleEl) tumbleEl.innerText = fakeHex;
+        frames++;
+        if (frames > 10) clearInterval(interval);
+      }, 45);
+
+      await new Promise(r => setTimeout(r, 550));
+
+      // STAGE 2: Query Backend Vault and Compare
+      if (termBadge) {
+        termBadge.innerText = "VAULT MATCHING";
+        termBadge.style.color = "#a855f7";
+      }
+      if (beam) beam.style.display = "block";
+
+      try {
+        const res = await fetch("/api/security/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: password })
+        });
+        const data = await res.json();
+
+        // Lock tumble into the actual input hash
+        if (tumbleEl) tumbleEl.innerText = data.input_hash;
+
+        await new Promise(r => setTimeout(r, 400));
+
+        if (termLog) {
+          termLog.innerHTML += `
+            <div class="term-line"><span class="term-prompt">[STAGE 2]</span> <span>Querying Backend Vault File: <code style="color: #60a5fa;">${data.vault_location}</code></span></div>
+            <div class="term-line"><span class="term-prompt">[VAULT]</span> <span>Stored Hashcode: <code style="color: #a855f7;">${data.stored_hash}</code></span></div>
+            <div class="term-line"><span class="term-prompt">[COMPARE]</span> <span>Comparing Input Hash vs Stored Hash (Constant-Time HMAC comparison)...</span></div>
+          `;
+        }
+
+        await new Promise(r => setTimeout(r, 550));
+        if (beam) beam.style.display = "none";
+
+        // STAGE 3: Result Handling
+        if (data.matched) {
+          if (termBadge) {
+            termBadge.innerText = "ACCESS GRANTED";
+            termBadge.style.color = "#10b981";
+          }
+
+          if (termLog) {
+            termLog.innerHTML += `
+              <div class="term-line" style="color: #34d399; font-weight: 700;">
+                <span class="term-prompt" style="color: #10b981;">[STATUS]</span>
+                <span>✓ 64/64 NIBBLE MATCH! Input Hash === Stored Vault Hashcode.</span>
+              </div>
+            `;
+          }
+
+          if (resultBox) {
+            resultBox.className = "term-result-box success";
+            resultBox.innerHTML = `
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-circle-check" style="font-size: 22px;"></i>
+                <div>
+                  <div style="font-size: 14px; font-weight: 700;">${data.message}</div>
+                  <div style="font-size: 11px; font-weight: 500; color: #a7f3d0; margin-top: 3px;">
+                    Backend Location: <code>c:\\Users\\Lenovo\\Desktop\\DSA Project\\security_vault.json</code> | Opening folders...
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+
+          const icon = document.getElementById("vault-main-icon");
+          const headerIcon = document.getElementById("vault-header-icon");
+          if (icon) icon.className = "fa-solid fa-lock-open";
+          if (headerIcon) headerIcon.style.background = "linear-gradient(135deg, #10b981, #059669)";
+
+          isVaultUnlocked = true;
+          updateVaultNavBadge();
+
+          setTimeout(() => {
+            closeVaultLockModal();
+            switchPage("p2");
+            showToast("🔓 Access Granted: Organised Folders Unlocked!");
+          }, 1200);
+
+        } else {
+          if (termBadge) {
+            termBadge.innerText = "ACCESS DENIED";
+            termBadge.style.color = "#f43f5e";
+          }
+
+          if (termLog) {
+            termLog.innerHTML += `
+              <div class="term-line" style="color: #fb7185; font-weight: 700;">
+                <span class="term-prompt" style="color: #f43f5e;">[STATUS]</span>
+                <span>❌ HASH MISMATCH! Input digest does NOT match stored vault hashcode.</span>
+              </div>
+            `;
+          }
+
+          if (resultBox) {
+            resultBox.className = "term-result-box error";
+            resultBox.innerHTML = `
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 22px;"></i>
+                <div>
+                  <div style="font-size: 14px; font-weight: 700;">${data.message}</div>
+                  <div style="font-size: 11px; font-weight: 500; color: #fecdd3; margin-top: 3px;">
+                    Input Hash: <code>${data.input_hash.substring(0, 16)}...</code> &ne; Stored Hash: <code>${data.stored_hash.substring(0, 16)}...</code>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+
+          if (passInput) {
+            passInput.focus();
+            passInput.select();
+          }
+        }
+
+      } catch (err) {
+        if (beam) beam.style.display = "none";
+        if (termBadge) {
+          termBadge.innerText = "ERROR";
+          termBadge.style.color = "#ef4444";
+        }
+        if (resultBox) {
+          resultBox.className = "term-result-box error";
+          resultBox.innerText = "Error verifying hash with backend: " + err.message;
+        }
+      } finally {
+        if (unlockBtn) {
+          unlockBtn.disabled = false;
+          unlockBtn.innerHTML = `<i class="fa-solid fa-fingerprint"></i> Authenticate & Match Hash`;
+        }
+      }
+    }
+
+    // ESC key closes modals
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeTreeModal();
+        // If vault lock modal is open and not yet unlocked, close it and stay on p1
+        const vaultModal = document.getElementById("vault-lock-modal-overlay");
+        if (vaultModal && vaultModal.classList.contains("open")) {
+          cancelVaultUnlock();
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>
